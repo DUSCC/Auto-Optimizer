@@ -6,3 +6,4 @@
 
 #ignore cached files
 .pyc
+.cpython
