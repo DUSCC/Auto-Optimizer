@@ -1,0 +1,8 @@
+#ignore saved user configs
+.pickel
+
+#ignore last sent .dat files
+.dat
+
+#ignore cached files
+.pyc
