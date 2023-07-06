@@ -494,6 +494,7 @@ class MainApplication(ctk.CTk):
             self.host_connection_window = HostConnectionWindow(self.root, "Host Connection Manager", "800x600", "grey95", self)
         else:
             self.host_connection_window.top_level.deiconify()
+            self.host_connection_window.LoadTableData()
         self.host_connection_window.top_level.lift()
         self.host_connection_window.top_level.attributes('-topmost',True)
         self.host_connection_window.top_level.after_idle(self.host_connection_window.top_level.attributes,'-topmost',False)

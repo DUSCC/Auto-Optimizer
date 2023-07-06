@@ -26,7 +26,8 @@ class HostConnectionWindow():
 
         self.selected_item = None
         self.table = None
-        self.tabledata = self.LoadTableData()
+        self.tabledata = None
+        self.LoadTableData()
 
         self.status_label = None
 
@@ -132,12 +133,10 @@ class HostConnectionWindow():
         try:
             with open("table.pickle", "rb") as f:
                 tabledata = pickle.load(f)
-                return tabledata
+                self.tabledata = tabledata
         
         except Exception as ex:
-            print(f"2 {ex}")
             return TableData()
-        pass
 
     def ConnectWithConfig(self):
         if self.selected_item == None:
