@@ -346,7 +346,7 @@ class MainApplication(ctk.CTk):
         p_max = 4#int(self.mms_PQ_max.get())
         p_n = 2#int(self.mms_PQ_n.get())
 
-        PATH = "test/path"#self.remote_dir.get()
+        PATH = self.remote_dir.get()
 
         cores_per_node = 128#int(self.cores_per_node.get())
         

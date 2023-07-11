@@ -41,7 +41,7 @@ class HostConfigWindow():
         if self.selected_items == None:
             return
         
-        config = (host, user, port, password)
+        config = (host, user, port)
         
         for item in self.selected_items:
             index = self.table.index(item)
@@ -91,7 +91,7 @@ class HostConfigWindow():
         options_add_button = ctk.CTkButton(options_frame, text = "Add", command = lambda : self.AddHostConfig(login_host_entry.get(), login_user_entry.get(), login_port_entry.get()), font = ("system", 20))
         options_add_button.place(anchor = "center", relwidth = 0.8, relheight = 0.2, relx = 0.5, rely = 0.25)
 
-        options_edit_button = ctk.CTkButton(options_frame, text = "Update", command = lambda : self.UpdateHostConfig(login_host_entry.get(), login_user_entry.get(), login_port_entry.get(), login_password_entry.get()), font = ("system", 20))
+        options_edit_button = ctk.CTkButton(options_frame, text = "Update", command = lambda : self.UpdateHostConfig(login_host_entry.get(), login_user_entry.get(), login_port_entry.get()), font = ("system", 20))
         options_edit_button.place(anchor = "center", relwidth = 0.8, relheight = 0.2, relx = 0.5, rely = 0.50)
 
         options_delete_button = ctk.CTkButton(options_frame, text = "Delete", command = lambda : self.DeleteHostConfig(), font = ("system", 20))
