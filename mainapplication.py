@@ -120,6 +120,13 @@ def WaitingForCurrentProcessToFinish(client, user):
     else:
         True
 
+def sftp_exists(sftp, path):
+    try:
+        sftp.stat(path)
+        return True
+    except FileNotFoundError:
+        return False
+
 class MainApplication(ctk.CTk):
     def __init__(self):
         self.root = ctk.CTk()
@@ -354,38 +361,37 @@ class MainApplication(ctk.CTk):
 
         setup_sh_path, runhpl_dot_sh_path, hpl_dot_dat_file_paths = GenerateFiles(standard_values, nb_groups, pq_groups, cores_per_node)
 
-        # sftpClient = self.client.open_sftp()
+        print(setup_sh_path, runhpl_dot_sh_path, hpl_dot_dat_file_paths)
 
-        # sftpClient.put(setup_sh_path, f"{PATH}/setup.sh")#send setup.sh
-        # sftpClient.put(runhpl_dot_sh_path, f"{PATH}/runhpl.sh")#send runhpl.sh
+        sftpClient = self.client.open_sftp()
 
-        # def sftp_exists(sftp, path):
-        #     try:
-        #         sftp.stat(path)
-        #         return True
-        #     except FileNotFoundError:
-        #         return False
+        sftpClient.put(setup_sh_path, f"{PATH}/setup.sh")#send setup.sh
+        sftpClient.put(runhpl_dot_sh_path, f"{PATH}/runhpl.sh")#send runhpl.sh
 
-        # data = []
-        # for hpl_dot_dat_file_path in hpl_dot_dat_file_paths:
+        data = []
+        for hpl_dot_dat_file_path in hpl_dot_dat_file_paths:
             
-        #     sftpClient.put(hpl_dot_dat_file_path, f"{PATH}/HPL.dat")#move
-        #     if sftp_exists(sftpClient, f"{PATH}/auto-opt/build/bin/xhpl") == True:
-        #         (stdin, stdout, stderr) = self.client.exec_command(f"cd {PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
-        #         while(WaitingForCurrentProcessToFinish(self.client) == False):
-        #             time.sleep(0.2)
+            sftpClient.put(hpl_dot_dat_file_path, f"{PATH}/HPL.dat")#move
+            if sftp_exists(sftpClient, f"{PATH}/auto-opt/build/bin/xhpl") == True:
+                (stdin, stdout, stderr) = self.client.exec_command(f"cd {PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
+                while(WaitingForCurrentProcessToFinish(self.client) == False):
+                    time.sleep(0.2)
             
-        #     else:
-        #         (stdin, stdout, stderr) = self.client.exec_command(f"cd {PATH}/; dos2unix setup.sh; sbatch setup.sh")
-        #         while(sftp_exists(sftpClient, f"{PATH}/auto-opt/build/bin/xhpl") == False):
-        #             time.sleep(0.2)
+            else:
+                (stdin, stdout, stderr) = self.client.exec_command(f"cd {PATH}/; dos2unix setup.sh; sbatch setup.sh")
+                while(sftp_exists(sftpClient, f"{PATH}/auto-opt/build/bin/xhpl") == False):
+                    time.sleep(0.2)
                 
-        #         (stdin, stdout, stderr) = self.client.exec_command(f"cd{PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
-        #         while(WaitingForCurrentProcessToFinish(self.client) == False):
-        #             time.sleep(0.2)
+                (stdin, stdout, stderr) = self.client.exec_command(f"cd{PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
+                while(WaitingForCurrentProcessToFinish(self.client) == False):
+                    time.sleep(0.2)
 
-        #     hpl_out_file = sftpClient.open(f"{PATH}/auto-opt/out/HPL.out")
-        #     out_data = hpl_out_file.readlines()
+            hpl_out_file = sftpClient.open(f"{PATH}/auto-opt/out/HPL.out")
+            data.append(hpl_out_file.readlines())
+
+        print(data)
+
+        
             
         #     useful_line_indexs = [18, 19, 21, 22, 38]
         #     useful_data = [line for index, line in enumerate(out_data) if index in useful_line_indexs]
