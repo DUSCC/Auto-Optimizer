@@ -17,11 +17,14 @@ ctk.set_default_color_theme("green")
 ctk.set_appearance_mode("light")
 
 def ConfigureBaseFile(base_file, *inputs):
-    file = base_file
-    for input in inputs:
-        file = file.replace("{}", str(input), 1)
+    file = open(base_file, 'r')
+    base_data = file.read()
+    file.close()
 
-    return file
+    for input in inputs:
+        base_data = base_data.replace("{}", str(input), 1)
+
+    return base_data
 
 def LoadSetup():
     from_file = open("templates/setup.sh", 'r')
@@ -35,11 +38,7 @@ def LoadSetup():
     return "filestosend/setup.sh"
 
 def GenerateRunHPL(cores_per_node):
-    base_file = open("templates/runhpl.sh", 'r')
-    base_data = base_file.read()
-    base_file.close()
-
-    data = ConfigureBaseFile(base_data, cores_per_node, cores_per_node)
+    data = ConfigureBaseFile("templates/runhpl.sh", cores_per_node, cores_per_node)
 
     file = open("filestosend/runhpl.sh", 'w')
     file.write(data)
@@ -52,8 +51,8 @@ def GenerateDotDatFiles(standard_values, nb_groups, pq_groups):
     for nb_group in nb_groups:
         hpl_dot_dat_file_paths.append(GenerateNBDat(standard_values, nb_group))
     for pq_group in pq_groups:
-        p_group = [pair[0] for pair in pq_groups]
-        q_group = [pair[1] for pair in pq_groups]
+        p_group = [pair[0] for pair in pq_group]
+        q_group = [pair[1] for pair in pq_group]
         hpl_dot_dat_file_paths.append(GeneratePQDat(standard_values, p_group, q_group))
     
     return hpl_dot_dat_file_paths
@@ -63,7 +62,7 @@ def GenerateNBDat(standard_values, nb_group):
     NB_n = len(nb_group)
     NBs = ""
     for NB in nb_group:
-        NBs += NB
+        NBs += f"{NB} "
     PQ_n = 1
     Ps = standard_values[2]
     Qs = standard_values[3]
@@ -81,17 +80,18 @@ def GeneratePQDat(standard_values, p_group, q_group):
     Ns = standard_values[0]
     NB_n = 1
     NBs = standard_values[1]
-    PQ_n = len(pq_group)
+
+    PQ_n = len(p_group) # or len(q_group)
     Ps = ""
     for p in p_group:
-        Ps += p
+        Ps += f"{p} "
     Qs = ""
     for q in q_group:
-        Qs += q
+        Qs += f"{q} "
     
     data = ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs)
 
-    file_path = f"filestosend/hplfiles/PQ ({pq_group[0]} - {pq_group[-1]}) HPL.dat"
+    file_path = f"filestosend/hplfiles/PQ ({p_group[0], q_group[0]} - {p_group[-1], q_group[-1]}) HPL.dat"
 
     file = open(file_path, 'w')
     file.write(data)
@@ -113,8 +113,8 @@ def RemoveOldFiles():
     for f in os.listdir(dir):
         os.remove(os.path.join(dir, f))
 
-def WaitingForCurrentProcessToFinish(client):
-    stdin, stdout, stderr = client.exec_command("squeue -u pzhm13")
+def WaitingForCurrentProcessToFinish(client, user):
+    stdin, stdout, stderr = client.exec_command(f"squeue -u {user}")
     if(len(stdout.readlines()) > 1):
         return False
     else:
