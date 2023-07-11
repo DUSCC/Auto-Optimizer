@@ -7,3 +7,6 @@
 #ignore cached files
 *.pyc
 *.cpython
+
+#ignore test files
+test.py
