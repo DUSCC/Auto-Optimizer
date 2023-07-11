@@ -67,8 +67,15 @@ def GenerateNBDat(standard_values, nb_group):
     PQ_n = 1
     Ps = standard_values[2]
     Qs = standard_values[3]
-    ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs)
-    
+    data = ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs)
+
+    file_path = f"filestosend/hplfiles/NB ({nb_group[0]} - {nb_group[-1]}) HPL.dat"
+
+    file = open(file_path, 'w')
+    file.write(data)
+    file.close()
+
+    return file_path
 
 def GeneratePQDat(standard_values, p_group, q_group):
     Ns = standard_values[0]
@@ -81,7 +88,16 @@ def GeneratePQDat(standard_values, p_group, q_group):
     Qs = ""
     for q in q_group:
         Qs += q
-    ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs)
+    
+    data = ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs)
+
+    file_path = f"filestosend/hplfiles/PQ ({pq_group[0]} - {pq_group[-1]}) HPL.dat"
+
+    file = open(file_path, 'w')
+    file.write(data)
+    file.close()
+
+    return file_path
 
 def GenerateFiles(standard_values, nb_groups, pq_groups, cores_per_node):
 
