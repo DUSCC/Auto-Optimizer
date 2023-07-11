@@ -153,6 +153,8 @@ class MainApplication(ctk.CTk):
         self.optimal_p = None
         self.optimal_q = None
 
+        self.user = None
+
         self.MAX_PARTITION_SIZE = 20
 
         self.cores_per_node = None
@@ -331,7 +333,7 @@ class MainApplication(ctk.CTk):
         self.optimal_q = optimal_q
 
     def RunOptimization(self):
-        standard_n = 10000#self.standard_n
+        standard_n = 1000#self.standard_n
         standard_nb = 240#self.standard_nb
         standard_p = 4#self.standard_p
         standard_q = 32#self.standard_q
@@ -346,7 +348,7 @@ class MainApplication(ctk.CTk):
         p_max = 4#int(self.mms_PQ_max.get())
         p_n = 2#int(self.mms_PQ_n.get())
 
-        PATH = self.remote_dir.get()
+        PATH = "hpc/hpl-2.3"#self.remote_dir.get()
 
         cores_per_node = 128#int(self.cores_per_node.get())
         
@@ -361,8 +363,6 @@ class MainApplication(ctk.CTk):
 
         setup_sh_path, runhpl_dot_sh_path, hpl_dot_dat_file_paths = GenerateFiles(standard_values, nb_groups, pq_groups, cores_per_node)
 
-        print(setup_sh_path, runhpl_dot_sh_path, hpl_dot_dat_file_paths)
-
         sftpClient = self.client.open_sftp()
 
         sftpClient.put(setup_sh_path, f"{PATH}/setup.sh")#send setup.sh
@@ -374,7 +374,7 @@ class MainApplication(ctk.CTk):
             sftpClient.put(hpl_dot_dat_file_path, f"{PATH}/HPL.dat")#move
             if sftp_exists(sftpClient, f"{PATH}/auto-opt/build/bin/xhpl") == True:
                 (stdin, stdout, stderr) = self.client.exec_command(f"cd {PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
-                while(WaitingForCurrentProcessToFinish(self.client) == False):
+                while(WaitingForCurrentProcessToFinish(self.client, self.user) == False):
                     time.sleep(0.2)
             
             else:
@@ -383,7 +383,7 @@ class MainApplication(ctk.CTk):
                     time.sleep(0.2)
                 
                 (stdin, stdout, stderr) = self.client.exec_command(f"cd{PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
-                while(WaitingForCurrentProcessToFinish(self.client) == False):
+                while(WaitingForCurrentProcessToFinish(self.client, self.user) == False):
                     time.sleep(0.2)
 
             hpl_out_file = sftpClient.open(f"{PATH}/auto-opt/out/HPL.out")

@@ -61,7 +61,7 @@ class HostConnectionWindow():
         frame = ctk.CTkFrame(self.top_level)
         frame.place(anchor = "sw", relx = 0, rely = 1, relheight = 0.7, relwidth = 0.45) 
         
-        columns = ("host", "user", "port", "password")
+        columns = ("host", "user", "port")
         
         table = ttk.Treeview(frame, columns=columns, show = "headings", selectmode="browse")
 
@@ -163,6 +163,7 @@ class HostConnectionWindow():
             self.client = ssh_client
             self.SetConfig(host, user, port)
             self.main_application.client = self.client
+            self.main_application.user = user
 
         else:
             self.SetStatus(0)
