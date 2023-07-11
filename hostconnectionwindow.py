@@ -77,8 +77,11 @@ class HostConnectionWindow():
 
         table.bind('<<TreeviewSelect>>', self.item_selected)
 
-        for data in self.tabledata.data:
-            table.insert("", "end", values = data)
+        try:
+            for data in self.tabledata.data:
+                table.insert("", "end", values = data)
+        except:
+            pass
         
         if(len(table.get_children()) == 0):
             pass
