@@ -8,5 +8,5 @@
 *.pyc
 *.cpython
 
-#ignore test files
+#ignore test file
 test.py
