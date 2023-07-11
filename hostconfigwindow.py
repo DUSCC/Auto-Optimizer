@@ -134,15 +134,15 @@ class HostConfigWindow():
                 pickle.dump(self.tabledata, f, protocol=pickle.HIGHEST_PROTOCOL)
         
         except Exception as ex:
-            print(f"1 {ex}")
+            print(ex)
 
     def LoadTableData(self):
         try:
             with open("table.pickle", "rb") as f:
                 tabledata = pickle.load(f)
-                return tabledata
+                self.tabledata = tabledata
         
         except Exception as ex:
-            print(f"2 {ex}")
+            print(ex)
             return TableData()
         pass

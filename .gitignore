@@ -1,5 +1,5 @@
 #ignore saved user configs
-.pickle
+*.pickle
 
 #ignore last sent .dat files
 *.dat
