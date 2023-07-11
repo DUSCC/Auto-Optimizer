@@ -48,46 +48,10 @@ def GenerateRunHPL(file_generation_parameters):
     return "filestosend/runhpl.sh"
 
 def GenerateDotDatFiles(file_generation_parameters):
-
-    standard_values = file_generation_parameters[0]
-    nbs = file_generation_parameters[1]
-    pqs = file_generation_parameters[2]
-
-    configurations = []
-
-    for nb in nbs:
-        configurations.append((file_generation_parameters[0][0], nb, file_generation_parameters[0][2]))
-    for pq in pqs:
-        configurations.append((file_generation_parameters[0][0], file_generation_parameters[0][1], pq))
-
-    file_paths = []
-
-    for configuration in configurations:
-        file_paths.append(GenerateDotDatFile(configuration))
+    print(file_generation_parameters)
     
-    return file_paths
-    
-def GenerateDotDatFile(specific_file_generation_parameters):
-    base_file = open("templates/HPL.dat", 'r')
-    base_data = base_file.read()
-    base_file.close()
-
-    values = (
-        specific_file_generation_parameters[0], 
-        specific_file_generation_parameters[1], 
-        specific_file_generation_parameters[2][0], 
-        specific_file_generation_parameters[2][1]
-    )
-
-    data = ConfigureBaseFile(base_data, values[0], values[1], values[2], values[3])
-
-    file_path = f"filestosend/hplfiles/{values[0]}-{values[1]}-{values[2]}-{values[3]}-HPL.dat"
-
-    file = open(file_path, 'w')
-    file.write(data)
-    file.close()
-
-    return file_path
+def GenerateDotDatFile():
+    pass
 
 def GenerateFiles(file_generation_parameters):
 
@@ -109,6 +73,7 @@ def WaitingForCurrentProcessToFinish(client):
         return False
     else:
         True
+
 class MainApplication(ctk.CTk):
     def __init__(self):
         self.root = ctk.CTk()
@@ -134,6 +99,8 @@ class MainApplication(ctk.CTk):
         self.optimal_nb = None
         self.optimal_p = None
         self.optimal_q = None
+
+        self.MAX_PARTITION_SIZE = 20
 
         self.cores_per_node = None
 
@@ -311,109 +278,141 @@ class MainApplication(ctk.CTk):
         self.optimal_q = optimal_q
 
     def RunOptimization(self):
-        standard_n = self.standard_n
-        standard_nb = self.standard_nb
-        standard_p = self.standard_p
-        standard_q = self.standard_q
+        standard_n = 10000#self.standard_n
+        standard_nb = 240#self.standard_nb
+        standard_p = 4#self.standard_p
+        standard_q = 32#self.standard_q
 
-        nb_min = int(self.mms_NB_min.get())
-        nb_max = int(self.mms_NB_max.get())
-        nb_n = int(self.mms_NB_n.get())
+        standard_values = (standard_n, standard_nb, standard_p, standard_q)
 
-        p_min = int(self.mms_PQ_min.get())
-        p_max = int(self.mms_PQ_max.get())
-        p_n = int(self.mms_PQ_n.get())
+        nb_min = 120#int(self.mms_NB_min.get())
+        nb_max = 240#int(self.mms_NB_max.get())
+        nb_n = 70#int(self.mms_NB_n.get())
 
-        PATH = self.remote_dir.get()
+        p_min = 1#int(self.mms_PQ_min.get())
+        p_max = 4#int(self.mms_PQ_max.get())
+        p_n = 2#int(self.mms_PQ_n.get())
 
-        cores_per_node = int(self.cores_per_node.get())
+        PATH = "test/path"#self.remote_dir.get()
 
-        standard_values = (standard_n, standard_nb, (standard_p, standard_q))
+        cores_per_node = 128#int(self.cores_per_node.get())
         
-        def lerp(a, b, t):
-            return a + (b-a)*t
+        nb_range = self.GenerateSamplePoints(nb_min, nb_max, nb_n)
+        p_range = self.GenerateSamplePoints(p_min, p_max, p_n)
+        q_range = [cores_per_node // p for p in p_range]
 
-        def calcQ(p, cores_per_node):
-            return math.floor(cores_per_node / p)
+        nb_groups = self.PartitionRange(nb_range)
+        pq_groups = [(p, cores_per_node // p) for p in self.PartitionRange(p_range)]
 
-        range_of_nbs = [math.floor(lerp(nb_min, nb_max, t/(nb_n+1))) for t in range(1, (nb_n + 1))]
-        range_of_ps = [math.floor(lerp(p_min, p_max, t/(p_n + 1))) for t in range(1, p_n + 1)]
-        range_of_pq_pairs = [(p, calcQ(p, cores_per_node)) for p in range_of_ps]
-
-        file_generation_parameters = (standard_values, range_of_nbs, range_of_pq_pairs, cores_per_node)
+        file_generation_parameters = (standard_values, nb_groups, pq_groups, cores_per_node)
 
         RemoveOldFiles()
 
         setup_sh_path, runhpl_dot_sh_path, hpl_dot_dat_file_paths = GenerateFiles(file_generation_parameters)
 
-        sftpClient = self.client.open_sftp()
+        # sftpClient = self.client.open_sftp()
 
-        sftpClient.put(setup_sh_path, f"{PATH}/setup.sh")#send setup.sh
-        sftpClient.put(runhpl_dot_sh_path, f"{PATH}/runhpl.sh")#send runhpl.sh
+        # sftpClient.put(setup_sh_path, f"{PATH}/setup.sh")#send setup.sh
+        # sftpClient.put(runhpl_dot_sh_path, f"{PATH}/runhpl.sh")#send runhpl.sh
 
-        def sftp_exists(sftp, path):
-            try:
-                sftp.stat(path)
-                return True
-            except FileNotFoundError:
-                return False
+        # def sftp_exists(sftp, path):
+        #     try:
+        #         sftp.stat(path)
+        #         return True
+        #     except FileNotFoundError:
+        #         return False
 
-        data = []
-        for hpl_dot_dat_file_path in hpl_dot_dat_file_paths:
+        # data = []
+        # for hpl_dot_dat_file_path in hpl_dot_dat_file_paths:
             
-            sftpClient.put(hpl_dot_dat_file_path, f"{PATH}/HPL.dat")#move
-            if sftp_exists(sftpClient, f"{PATH}/auto-opt/build/bin/xhpl") == True:
-                (stdin, stdout, stderr) = self.client.exec_command(f"cd {PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
-                while(WaitingForCurrentProcessToFinish(self.client) == False):
-                    time.sleep(0.2)
+        #     sftpClient.put(hpl_dot_dat_file_path, f"{PATH}/HPL.dat")#move
+        #     if sftp_exists(sftpClient, f"{PATH}/auto-opt/build/bin/xhpl") == True:
+        #         (stdin, stdout, stderr) = self.client.exec_command(f"cd {PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
+        #         while(WaitingForCurrentProcessToFinish(self.client) == False):
+        #             time.sleep(0.2)
             
-            else:
-                (stdin, stdout, stderr) = self.client.exec_command(f"cd {PATH}/; dos2unix setup.sh; sbatch setup.sh")
-                while(sftp_exists(sftpClient, f"{PATH}/auto-opt/build/bin/xhpl") == False):
-                    time.sleep(0.2)
+        #     else:
+        #         (stdin, stdout, stderr) = self.client.exec_command(f"cd {PATH}/; dos2unix setup.sh; sbatch setup.sh")
+        #         while(sftp_exists(sftpClient, f"{PATH}/auto-opt/build/bin/xhpl") == False):
+        #             time.sleep(0.2)
                 
-                (stdin, stdout, stderr) = self.client.exec_command(f"cd{PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
-                while(WaitingForCurrentProcessToFinish(self.client) == False):
-                    time.sleep(0.2)
+        #         (stdin, stdout, stderr) = self.client.exec_command(f"cd{PATH}/; dos2unix runhpl.sh; sbatch runhpl.sh")
+        #         while(WaitingForCurrentProcessToFinish(self.client) == False):
+        #             time.sleep(0.2)
 
-            hpl_out_file = sftpClient.open(f"{PATH}/auto-opt/out/HPL.out")
-            out_data = hpl_out_file.readlines()
+        #     hpl_out_file = sftpClient.open(f"{PATH}/auto-opt/out/HPL.out")
+        #     out_data = hpl_out_file.readlines()
             
-            useful_line_indexs = [18, 19, 21, 22, 38]
-            useful_data = [line for index, line in enumerate(out_data) if index in useful_line_indexs]
+        #     useful_line_indexs = [18, 19, 21, 22, 38]
+        #     useful_data = [line for index, line in enumerate(out_data) if index in useful_line_indexs]
             
-            lines =[]
-            for line in useful_data:
-                line = line.strip(' \n')
-                lastspaceindex = line.rfind(' ')
-                line = float(line[lastspaceindex:])
-                lines.append(line)
+        #     lines =[]
+        #     for line in useful_data:
+        #         line = line.strip(' \n')
+        #         lastspaceindex = line.rfind(' ')
+        #         line = float(line[lastspaceindex:])
+        #         lines.append(line)
             
-            variables = lines[0:-1]
-            performance = lines[-1:][0]
+        #     variables = lines[0:-1]
+        #     performance = lines[-1:][0]
             
-            index, value = self.FindChangedValueAndIndex(variables[1:])
-            data.append((index, value, performance))
+        #     index, value = self.FindChangedValueAndIndex(variables[1:])
+        #     data.append((index, value, performance))
             
-            sftpClient.remove(f"{PATH}/HPL.dat")#delete
-            while sftp_exists(sftpClient, f"{PATH}/HPL.dat") == True:
-                time.sleep(0.2)
+        #     sftpClient.remove(f"{PATH}/HPL.dat")#delete
+        #     while sftp_exists(sftpClient, f"{PATH}/HPL.dat") == True:
+        #         time.sleep(0.2)
 
-        data.sort(key = lambda x:x[0])
+        # data.sort(key = lambda x:x[0])
 
-        number_of_varibles = data[-1][0]
+        # number_of_varibles = data[-1][0]
 
-        variable_fields = [[] for i in range(number_of_varibles)]
+        # variable_fields = [[] for i in range(number_of_varibles)]
 
-        for piece in data:
-            index, value = piece[0] - 1, piece[1:]
-            variable_fields[index].append(value)
+        # for piece in data:
+        #     index, value = piece[0] - 1, piece[1:]
+        #     variable_fields[index].append(value)
 
-        self.optimization_data = variable_fields
+        # self.optimization_data = variable_fields
 
-        self.UpdatePredictions()
-        self.UpdatePerformanceGraphs()
+        # self.UpdatePredictions()
+        # self.UpdatePerformanceGraphs()
+
+    def GenerateSamplePoints(self, MIN, MAX, SAMPLENUMBER):
+        delta = MAX - MIN
         
+        if SAMPLENUMBER > delta + 1:
+            raise SAMPLE_NUM_TOO_LARGE_EXCEPTION
+        if SAMPLENUMBER < 2:
+            raise SAMPLE_NUM_TOO_SMALL_EXCEPTION
+    
+        if delta < 0:
+            raise MIN_TOO_LARGE_EXCEPTION
+        if delta == 0:
+            raise MIN_EQUAL_TO_MAX_EXCEPTION
+    
+        if MIN <= 0:
+            raise MIN_TOO_SMALL_EXCEPTION
+        
+        sample_points = [int(MIN + delta * (i / (SAMPLENUMBER - 1))) for i in range(SAMPLENUMBER)]
+        return sample_points  
+    
+    def PartitionRange(self, rangedata):
+
+        number_of_samples = len(rangedata)
+        number_of_partitions = (number_of_samples // self.MAX_PARTITION_SIZE) + 1
+        
+        partitions = []
+        
+        for partition_number in range(number_of_partitions):
+            index = self.MAX_PARTITION_SIZE * partition_number
+            if partition_number == number_of_partitions - 1:
+                partitions.append(rangedata[index :])
+            else:
+                partitions.append(rangedata[index : index + self.MAX_PARTITION_SIZE])
+        
+        return partitions 
+
     def UpdatePredictions(self):
         optimal_settings = [max(variable_field, key = lambda x:x[1])[0] for variable_field in self.optimization_data]
 
