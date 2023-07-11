@@ -29,7 +29,7 @@ HPL.out      output file name (if any)
 0            U  in (0=transposed,1=no-transposed) form
 1            Equilibration (0=no,1=yes)
 8            memory alignment in double (> 0)
-##### This line (no. 32) is ignored (it serves as a separator). ###### {}
+##### This line (no. 32) is ignored (it serves as a separator). ######
 0                               Number of additional problem sizes for PTRANS
 1200 10000 30000                values of N
 0                               number of additional blocking sizes for PTRANS

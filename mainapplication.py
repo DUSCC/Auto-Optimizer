@@ -66,7 +66,7 @@ def GenerateNBDat(standard_values, nb_group):
     PQ_n = 1
     Ps = standard_values[2]
     Qs = standard_values[3]
-    data = ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs, "NB")
+    data = ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs)
 
     file_path = f"filestosend/hplfiles/NB ({nb_group[0]} - {nb_group[-1]}) HPL.dat"
 
@@ -89,7 +89,7 @@ def GeneratePQDat(standard_values, p_group, q_group):
     for q in q_group:
         Qs += f"{q} "
     
-    data = ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs, "PQ")
+    data = ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs)
 
     file_path = f"filestosend/hplfiles/PQ ({p_group[0], q_group[0]} - {p_group[-1], q_group[-1]}) HPL.dat"
 
@@ -389,11 +389,7 @@ class MainApplication(ctk.CTk):
             hpl_out_file = sftpClient.open(f"{PATH}/auto-opt/out/HPL.out")
             data.append(hpl_out_file.readlines())
 
-        for file_output in data:
-            for line in data:
-                for q in line:
-                    print(q)
-            print("\n\n\n")
+        print(data)
 
         
             
