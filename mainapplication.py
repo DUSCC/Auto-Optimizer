@@ -34,12 +34,12 @@ def LoadSetup():
 
     return "filestosend/setup.sh"
 
-def GenerateRunHPL(file_generation_parameters):
+def GenerateRunHPL(cores_per_node):
     base_file = open("templates/runhpl.sh", 'r')
     base_data = base_file.read()
     base_file.close()
 
-    data = ConfigureBaseFile(base_data, file_generation_parameters[3], file_generation_parameters[3])
+    data = ConfigureBaseFile(base_data, cores_per_node, cores_per_node)
 
     file = open("filestosend/runhpl.sh", 'w')
     file.write(data)
@@ -47,17 +47,47 @@ def GenerateRunHPL(file_generation_parameters):
 
     return "filestosend/runhpl.sh"
 
-def GenerateDotDatFiles(file_generation_parameters):
-    print(file_generation_parameters)
+def GenerateDotDatFiles(standard_values, nb_groups, pq_groups):
+    hpl_dot_dat_file_paths = []
+    for nb_group in nb_groups:
+        hpl_dot_dat_file_paths.append(GenerateNBDat(standard_values, nb_group))
+    for pq_group in pq_groups:
+        p_group = [pair[0] for pair in pq_groups]
+        q_group = [pair[1] for pair in pq_groups]
+        hpl_dot_dat_file_paths.append(GeneratePQDat(standard_values, p_group, q_group))
     
-def GenerateDotDatFile():
-    pass
+    return hpl_dot_dat_file_paths
+    
+def GenerateNBDat(standard_values, nb_group):
+    Ns = standard_values[0]
+    NB_n = len(nb_group)
+    NBs = ""
+    for NB in nb_group:
+        NBs += NB
+    PQ_n = 1
+    Ps = standard_values[2]
+    Qs = standard_values[3]
+    ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs)
+    
 
-def GenerateFiles(file_generation_parameters):
+def GeneratePQDat(standard_values, p_group, q_group):
+    Ns = standard_values[0]
+    NB_n = 1
+    NBs = standard_values[1]
+    PQ_n = len(pq_group)
+    Ps = ""
+    for p in p_group:
+        Ps += p
+    Qs = ""
+    for q in q_group:
+        Qs += q
+    ConfigureBaseFile("templates/HPL.dat", Ns, NB_n, NBs, PQ_n, Ps, Qs)
+
+def GenerateFiles(standard_values, nb_groups, pq_groups, cores_per_node):
 
     setup_sh_path = LoadSetup()
-    runhpl_dot_sh_path = GenerateRunHPL(file_generation_parameters)
-    hpl_dot_dat_files_paths = GenerateDotDatFiles(file_generation_parameters)
+    runhpl_dot_sh_path = GenerateRunHPL(cores_per_node)
+    hpl_dot_dat_files_paths = GenerateDotDatFiles(standard_values, nb_groups, pq_groups)
 
     return setup_sh_path, runhpl_dot_sh_path, hpl_dot_dat_files_paths
 
@@ -302,13 +332,11 @@ class MainApplication(ctk.CTk):
         q_range = [cores_per_node // p for p in p_range]
 
         nb_groups = self.PartitionRange(nb_range)
-        pq_groups = [(p, cores_per_node // p) for p in self.PartitionRange(p_range)]
-
-        file_generation_parameters = (standard_values, nb_groups, pq_groups, cores_per_node)
+        pq_groups = [[(p, cores_per_node // p) for p in p_group] for p_group in self.PartitionRange(p_range)]
 
         RemoveOldFiles()
 
-        setup_sh_path, runhpl_dot_sh_path, hpl_dot_dat_file_paths = GenerateFiles(file_generation_parameters)
+        setup_sh_path, runhpl_dot_sh_path, hpl_dot_dat_file_paths = GenerateFiles(standard_values, nb_groups, pq_groups, cores_per_node)
 
         # sftpClient = self.client.open_sftp()
 

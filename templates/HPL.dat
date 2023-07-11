@@ -4,10 +4,10 @@ HPLinpack benchmark input file
     6            device out (6=stdout,7=stderr,file)
     1            # of problems sizes (N)
     {}         Ns
-    1            # of NBs
+    {}            # of NBs
     {}           NBs
     0            PMAP process mapping (0=Row-,1=Column-major)
-    1            # of process grids (P x Q)
+    {}            # of process grids (P x Q)
     {}           Ps
     {}            Qs
     -1         threshold
